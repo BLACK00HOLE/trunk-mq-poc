@@ -1,0 +1,20 @@
+name: Test Suite
+
+# Realistic-ish gate for the merge queue. Runs on PRs (Draft-PR mode reuses it)
+# and on pushes to trunk-merge/** (Push-Triggered mode) plus main.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "trunk-merge/**"
+  workflow_dispatch:
+
+jobs:
+  test-suite:
+    name: test-suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run dummy test suite
+        run: bash tests/run-tests.sh
