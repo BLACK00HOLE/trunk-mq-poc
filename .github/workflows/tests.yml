@@ -21,4 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run dummy test suite
+        env:
+          # Temporarily shortened for the concurrency test (5 x 20s ~= 100s)
+          # so we can watch the queue's slot limit without long waits.
+          PER_TEST_SECONDS: "20"
         run: bash tests/run-tests.sh
