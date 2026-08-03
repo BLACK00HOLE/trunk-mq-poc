@@ -18,10 +18,15 @@ FAILED=0
 
 bad_marker() { grep -rl "FAIL" changes 2>/dev/null | grep -q .; }
 
+# Per-test duration in seconds. 5 tests x 65s ~= 5m25s total, so the suite runs
+# for at least 5 minutes (useful for observing queue/batching behavior).
+PER_TEST_SECONDS="${PER_TEST_SECONDS:-65}"
+
 i=0
 for t in "${TESTS[@]}"; do
   i=$((i + 1))
-  sleep 3   # simulate a real test taking time
+  echo "-> running $t (~${PER_TEST_SECONDS}s)..."
+  sleep "$PER_TEST_SECONDS"   # simulate a real, slow test
   if [ "$t" = "orders_create" ] && bad_marker; then
     echo "not ok $i - $t   (a changes/*.txt file contains FAIL)"
     FAILED=1
