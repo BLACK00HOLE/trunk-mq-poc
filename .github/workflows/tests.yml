@@ -1,14 +1,17 @@
 name: Test Suite
 
-# Realistic-ish gate for the merge queue. Runs on PRs (Draft-PR mode reuses it)
-# and on pushes to trunk-merge/** (Push-Triggered mode) plus main.
+# Gate for the merge queue. pull_request covers BOTH developer PRs and Trunk's
+# internal speculative PRs (trunk-merge/*), so we don't also listen on push -
+# that would double-run every commit. main isn't re-tested after merge (it was
+# already validated on the speculative branch).
 on:
   pull_request:
-  push:
-    branches:
-      - main
-      - "trunk-merge/**"
   workflow_dispatch:
+
+# Cancel superseded runs on the same PR/branch instead of piling them up.
+concurrency:
+  group: test-suite-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test-suite:

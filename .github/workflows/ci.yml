@@ -1,14 +1,14 @@
 name: CI
 
-# Runs on PRs (Trunk's Draft-PR testing mode reuses this automatically) and on
-# pushes to trunk-merge/** (so it also works if you switch to Push-Triggered mode).
+# pull_request covers both developer PRs and Trunk's internal speculative PRs,
+# so we don't also listen on push (which would double-run every commit).
 on:
   pull_request:
-  push:
-    branches:
-      - main
-      - "trunk-merge/**"
   workflow_dispatch:
+
+concurrency:
+  group: check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
