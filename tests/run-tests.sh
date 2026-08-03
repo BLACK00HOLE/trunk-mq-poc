@@ -2,11 +2,11 @@
 # Dummy test suite for the Trunk merge-queue POC.
 #
 # It simulates a real multi-test suite that takes a little time to run, so that
-# speculative batching / parallel queue behavior is actually observable.
+# speculative / batching / bisection behavior is actually observable.
 #
-# Pass/fail stays fully controllable per-PR using the same convention as
-# check.sh: a PR is "bad" if any file under changes/ contains the word FAIL.
-# The "orders_create" test is the one that reflects that marker; every other
+# Same invariant as check.sh: every VALUE across changes/*.txt must be UNIQUE.
+# A PR alone always passes; a COMBINATION fails only if two PRs share a value.
+# The "orders_create" test is the one that enforces that invariant; every other
 # test always passes.
 set -uo pipefail
 
@@ -16,19 +16,20 @@ echo "-----------------------------------"
 TESTS=(auth_login auth_logout orders_create orders_cancel billing_invoice)
 FAILED=0
 
-bad_marker() { grep -rl "FAIL" changes 2>/dev/null | grep -q .; }
+# True when two or more changes/*.txt files declare the same VALUE=<n>.
+dup_values() { grep -rhoE '^VALUE=[0-9]+' changes 2>/dev/null | sort | uniq -d | grep -q .; }
 
-# Per-test duration in seconds. 5 tests x 65s ~= 5m25s total, so the suite runs
-# for at least 5 minutes (useful for observing queue/batching behavior).
-PER_TEST_SECONDS="${PER_TEST_SECONDS:-65}"
+# Per-test duration in seconds. Kept short for the POC so queue behavior is quick
+# to observe; raise for a more "realistic" long-suite run.
+PER_TEST_SECONDS="${PER_TEST_SECONDS:-20}"
 
 i=0
 for t in "${TESTS[@]}"; do
   i=$((i + 1))
   echo "-> running $t (~${PER_TEST_SECONDS}s)..."
   sleep "$PER_TEST_SECONDS"   # simulate a real, slow test
-  if [ "$t" = "orders_create" ] && bad_marker; then
-    echo "not ok $i - $t   (a changes/*.txt file contains FAIL)"
+  if [ "$t" = "orders_create" ] && dup_values; then
+    echo "not ok $i - $t   (duplicate VALUE across changes/*.txt — combination conflict)"
     FAILED=1
   else
     echo "ok $i - $t"
