@@ -1,0 +1,20 @@
+name: CI
+
+# Runs on PRs (Trunk's Draft-PR testing mode reuses this automatically) and on
+# pushes to trunk-merge/** (so it also works if you switch to Push-Triggered mode).
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "trunk-merge/**"
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run POC gate
+        run: bash ./check.sh
